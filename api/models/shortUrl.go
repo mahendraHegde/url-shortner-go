@@ -22,3 +22,8 @@ func (shortUrl *ShortUrl) GetByUrl(db *gorm.DB, url string) (ShortUrl, error) {
 	err := db.Where(&ShortUrl{Url: url}).First(&res).Error
 	return res, err
 }
+func (shortUrl *ShortUrl) GetByShortenUrl(db *gorm.DB, url string) (ShortUrl, error) {
+	res := ShortUrl{}
+	err := db.Where(&ShortUrl{Short: url}).First(&res).Error
+	return res, err
+}
