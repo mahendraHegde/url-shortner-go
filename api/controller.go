@@ -17,6 +17,7 @@ import (
 // @Router / [post]
 // @Param Body body models.ShortUrl true "test"
 func (server *Server) ShortenUrl(c *gin.Context) {
+	BASE_URL := server.ENV.SERVER_DOMAIN + server.ENV.API_VERSION + "/"
 	var shortUrl models.ShortUrl
 	if err := c.ShouldBindJSON(&shortUrl); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -24,6 +25,7 @@ func (server *Server) ShortenUrl(c *gin.Context) {
 	}
 	res := server.getByKey("url-"+shortUrl.Url, shortUrl.GetByUrl)
 	if res != (models.ShortUrl{}) {
+		res.Short = BASE_URL + res.Short
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -42,6 +44,7 @@ func (server *Server) ShortenUrl(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	shortUrl.Short = BASE_URL + shortUrl.Short
 	c.JSON(http.StatusCreated, shortUrl)
 }
 

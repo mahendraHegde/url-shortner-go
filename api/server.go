@@ -11,6 +11,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 
+	"github.com/mahendrahegde/url-shortner-golang/api/middlewares"
 	"github.com/mahendrahegde/url-shortner-golang/api/models"
 
 	//swagger
@@ -91,6 +92,7 @@ func (server *Server) Start() {
 	//swagger
 	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", server.ENV.PORT)) // The url pointing to API definition
 	router := gin.Default()
+	router.Use(middlewares.DummyMiddleware())
 	server.RouterGroup = router.Group(server.ENV.API_VERSION)
 	server.InitRotes()
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
