@@ -22,7 +22,7 @@ func (server *Server) ShortenUrl(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	res := server.getByKey(shortUrl.Url, shortUrl.GetByUrl)
+	res := server.getByKey("url-"+shortUrl.Url, shortUrl.GetByUrl)
 	if res != (models.ShortUrl{}) {
 		c.JSON(http.StatusOK, res)
 		return
@@ -44,6 +44,24 @@ func (server *Server) ShortenUrl(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, shortUrl)
 }
-func (server *Server) GetByUrl(c *gin.Context) {
 
+// redirect to original url godoc
+// @Summary given shortened url redirect to original url
+// @Produce json
+// @Success 200
+// @Router / [get]
+// @Param url path string true "shortUrl"
+func (server *Server) Redirect(c *gin.Context) {
+	var shortUrl models.ShortUrl
+	short := c.Param("url")
+	if short == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	res := server.getByKey("short-"+short, shortUrl.GetByShortenUrl)
+	if res != (models.ShortUrl{}) {
+		c.Redirect(http.StatusTemporaryRedirect, res.Url)
+		return
+	}
+	c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 }

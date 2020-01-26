@@ -19,21 +19,37 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+type Env struct {
+	PORT          string
+	DB_HOST       string
+	DB_PORT       string
+	DB_USER       string
+	DB_PASS       string
+	DB_NAME       string
+	REDIS_HOST    string
+	REDIS_PORT    string
+	START_SEQ     string
+	API_VERSION   string
+	SERVER_DOMAIN string
+}
+
 type Server struct {
 	Db          *gorm.DB
 	RouterGroup *gin.RouterGroup
 	Cache       *redis.Client
+	ENV         Env
 }
 
 const (
-	PORT      = "PORT"
-	dbHost    = "DB_HOST"
-	dbPort    = "DB_PORT"
-	dbUser    = "DB_USER"
-	dbPass    = "DB_PASS"
-	dbName    = "DB_NAME"
-	redisHost = "REDIS_HOST"
-	redisPort = "REDIS_PORT"
+	PORT        = "PORT"
+	dbHost      = "DB_HOST"
+	dbPort      = "DB_PORT"
+	dbUser      = "DB_USER"
+	dbPass      = "DB_PASS"
+	dbName      = "DB_NAME"
+	redisHost   = "REDIS_HOST"
+	redisPort   = "REDIS_PORT"
+	API_VERSION = "API_VERSION"
 )
 
 // @title  API Docs
@@ -46,9 +62,10 @@ func (server *Server) Start() {
 		log.Print("Error loading .env file")
 	}
 	log.Println("envs loaded")
+	server.ENV = Env{PORT: os.Getenv("PORT"), DB_HOST: os.Getenv("DB_HOST"), DB_PORT: os.Getenv("DB_PORT"), DB_USER: os.Getenv("DB_USER"), DB_PASS: os.Getenv("DB_PASS"), DB_NAME: os.Getenv("DB_NAME"), REDIS_HOST: os.Getenv("REDIS_HOST"), REDIS_PORT: os.Getenv("REDIS_PORT"), START_SEQ: os.Getenv("START_SEQ"), API_VERSION: os.Getenv("API_VERSION"), SERVER_DOMAIN: os.Getenv("SERVER_DOMAIN")}
 
 	//db setup
-	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", GetEnv(dbHost), GetEnv(dbPort), GetEnv(dbUser), GetEnv(dbName), GetEnv(dbPass))
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", server.ENV.DB_HOST, server.ENV.DB_PORT, server.ENV.DB_USER, server.ENV.DB_NAME, server.ENV.DB_PASS)
 	log.Println("connecting to.." + connectionString)
 	db, err := gorm.Open("postgres", connectionString)
 	if err != nil {
@@ -60,7 +77,7 @@ func (server *Server) Start() {
 	models.Migrate(server.Db)
 
 	//redis
-	redisString := fmt.Sprintf("%s:%s", GetEnv(redisHost), GetEnv(redisPort))
+	redisString := fmt.Sprintf("%s:%s", server.ENV.REDIS_HOST, server.ENV.REDIS_PORT)
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisString,
 		Password: "", // no password set
@@ -72,16 +89,12 @@ func (server *Server) Start() {
 	server.Cache = client
 
 	//swagger
-	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", GetEnv(PORT))) // The url pointing to API definition
+	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", server.ENV.PORT)) // The url pointing to API definition
 	router := gin.Default()
-	server.RouterGroup = router.Group("/v1")
+	server.RouterGroup = router.Group(server.ENV.API_VERSION)
 	server.InitRotes()
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
-	if err := router.Run(":" + GetEnv(PORT)); err != nil {
-		log.Fatal("unable to start server at port", GetEnv(PORT))
+	if err := router.Run(":" + server.ENV.PORT); err != nil {
+		log.Fatal("unable to start server at port", server.ENV.PORT)
 	}
-}
-
-func GetEnv(name string) string {
-	return os.Getenv(name)
 }

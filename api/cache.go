@@ -3,15 +3,13 @@ package api
 import (
 	"encoding/json"
 	"log"
-	"os"
 	"strconv"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	"github.com/mahendrahegde/url-shortner-golang/api/models"
 	"github.com/mahendrahegde/url-shortner-golang/api/utils"
 )
-
-const START_SEQ = "START_SEQ"
 
 func (server *Server) getNextSeq(shortUrl models.ShortUrl) (int, error) {
 	seq, _ := server.Cache.Get("sequence").Result()
@@ -23,7 +21,7 @@ func (server *Server) getNextSeq(shortUrl models.ShortUrl) (int, error) {
 			lastSeq, err := utils.Base62Decode(res.Short)
 
 			if err != nil {
-				startSeq, err := strconv.Atoi(os.Getenv(START_SEQ))
+				startSeq, err := strconv.Atoi(server.ENV.START_SEQ)
 				if err != nil {
 					log.Fatal("unable to parse start seq ", err.Error())
 					return -1, err
@@ -34,7 +32,7 @@ func (server *Server) getNextSeq(shortUrl models.ShortUrl) (int, error) {
 				nextSeq = int(lastSeq + 1)
 			}
 		} else {
-			startSeq, err := strconv.Atoi(os.Getenv(START_SEQ))
+			startSeq, err := strconv.Atoi(server.ENV.START_SEQ)
 			if err != nil {
 				log.Fatal("unable to parse start seq ", err.Error())
 				return -1, err
@@ -68,7 +66,7 @@ func (server *Server) getByKey(url string, f func(*gorm.DB, string) (models.Shor
 			return res
 		}
 	}
-	if res, err := f(server.Db, url); err == nil {
+	if res, err := f(server.Db, strings.Split(url, "-")[1]); err == nil {
 		if marshalled, err := json.Marshal(res); err == nil {
 			server.Cache.Set(url, marshalled, 0)
 		}
