@@ -90,7 +90,7 @@ func (server *Server) Start() {
 	server.Cache = client
 
 	//swagger
-	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", server.ENV.PORT)) // The url pointing to API definition
+	url := ginSwagger.URL(fmt.Sprintf("http://localhost:%s/docs/doc.json", server.ENV.PORT)) // The url pointing to API definition
 	router := gin.Default()
 	router.Use(middlewares.DummyMiddleware())
 	server.RouterGroup = router.Group(server.ENV.API_VERSION)
