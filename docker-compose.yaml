@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  api:
+    image: go-dev:1
+    environment:
+      - PORT=${PORT}
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - START_SEQ=${START_SEQ}
+      - API_VERSION=${API_VERSION}
+      - SERVER_DOMAIN=${SERVER_DOMAIN}
+    ports:
+      - "4444:4444"
+    volumes: 
+      - ./:/go/src/api
+      - ~/go/pkg:/go/pkg
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+
+  redis:
+    image: redis:5-alpine
