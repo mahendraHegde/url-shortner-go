@@ -1,8 +1,8 @@
-FROM golang:1.13-alpine3.10
+FROM golang:1.13-alpine
 ENV PATH="~/go/bin:${PATH}"
 RUN apk add git
-RUN go get github.com/codegangsta/gin
+RUN go get -u github.com/swaggo/swag/cmd/swag
 EXPOSE 3000
 WORKDIR /go/src/api
-CMD  ["go","run","main.go"]
+CMD  swag init && go run main.go
  

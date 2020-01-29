@@ -19,7 +19,6 @@ services:
       - "4444:4444"
     volumes: 
       - ./:/go/src/api
-      - ~/go/pkg:/go/pkg
     depends_on:
       - postgres
       - redis
